@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.meta.quicklauncher.data.model.UserPreferences
+import com.meta.quicklauncher.data.repository.UserPreferencesRepository
 import com.meta.quicklauncher.domain.model.AppInfo
 import com.meta.quicklauncher.domain.usecase.GetInstalledAppsUseCase
 import com.meta.quicklauncher.domain.usecase.SearchAppsUseCase
@@ -23,7 +25,8 @@ import javax.inject.Inject
 class LauncherViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val getInstalledAppsUseCase: GetInstalledAppsUseCase,
-    private val searchAppsUseCase: SearchAppsUseCase
+    private val searchAppsUseCase: SearchAppsUseCase,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -37,6 +40,8 @@ class LauncherViewModel @Inject constructor(
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    val userPreferences: StateFlow<UserPreferences> = userPreferencesRepository.userPreferencesFlow
 
     init {
         loadInstalledApps()
@@ -95,6 +100,25 @@ class LauncherViewModel @Inject constructor(
             }
         } catch (e: Exception) {
             // Handle launch failure
+        }
+    }
+
+    // User preferences methods
+    fun updateTheme(theme: String) {
+        viewModelScope.launch {
+            userPreferencesRepository.updateTheme(theme)
+        }
+    }
+
+    fun updateShowSystemApps(show: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.updateShowSystemApps(show)
+        }
+    }
+
+    fun updateMaxSearchResults(max: Int) {
+        viewModelScope.launch {
+            userPreferencesRepository.updateMaxSearchResults(max)
         }
     }
 }
