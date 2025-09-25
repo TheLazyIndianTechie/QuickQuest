@@ -9,9 +9,14 @@ import com.meta.quicklauncher.ui.spatial.SpatialLauncherScreen
 import com.oculus.spatial.spatialactivity.SpatialActivity
 
 @Composable
-fun QuickQuestApp() {
+fun QuickQuestApp(isLauncherVisible: Boolean = true) {
     val context = LocalContext.current
     val viewModel: LauncherViewModel = hiltViewModel()
+
+    // Only show launcher if visible (for Quest overlay mode)
+    if (!isLauncherVisible) {
+        return
+    }
 
     // Use Spatial UI if running in SpatialActivity (Quest), otherwise use regular UI
     if (context is SpatialActivity) {

@@ -1,6 +1,7 @@
 package com.meta.quicklauncher
 
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import com.meta.quicklauncher.gesture.GestureHandler
+import com.meta.quicklauncher.input.ButtonHandler
 import com.meta.quicklauncher.ui.launcher.LauncherViewModel
 import com.meta.quicklauncher.ui.theme.QuickQuestTheme
 import com.oculus.spatial.spatialactivity.SpatialActivity
@@ -23,7 +25,13 @@ class SpatialMainActivity : SpatialActivity() {
     @Inject
     lateinit var gestureHandler: GestureHandler
 
+    @Inject
+    lateinit var buttonHandler: ButtonHandler
+
     private val viewModel: LauncherViewModel by viewModels()
+
+    // Launcher visibility state
+    private var isLauncherVisible by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,8 +51,16 @@ class SpatialMainActivity : SpatialActivity() {
                     GestureHandler.GestureType.WRIST_TAP -> {
                         // Could be used for other actions
                     }
-                    GestureHandler.GestureType.MENU_BUTTON_DOUBLE_TAP -> {
-                        // Show launcher
+                }
+            }
+        }
+
+        // Set up button event detection
+        lifecycleScope.launch {
+            buttonHandler.buttonEvents.collect { buttonEvent ->
+                when (buttonEvent) {
+                    ButtonHandler.ButtonEvent.MENU_BUTTON_DOUBLE_TAP -> {
+                        // Show launcher on menu button double tap
                         showLauncher()
                     }
                 }
@@ -57,17 +73,31 @@ class SpatialMainActivity : SpatialActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    QuickQuestApp()
+                    QuickQuestApp(isLauncherVisible = isLauncherVisible)
                 }
             }
         }
     }
 
     private fun toggleLauncherVisibility() {
-        // TODO: Implement launcher visibility toggle
+        isLauncherVisible = !isLauncherVisible
     }
 
     private fun showLauncher() {
-        // TODO: Implement launcher show logic
+        isLauncherVisible = true
+    }
+
+    private fun hideLauncher() {
+        isLauncherVisible = false
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        // Pass key events to button handler first
+        if (buttonHandler.onKeyDown(keyCode, event)) {
+            return true
+        }
+
+        // Handle other key events if needed
+        return super.onKeyDown(keyCode, event)
     }
 }

@@ -2,10 +2,13 @@ package com.meta.quicklauncher.di
 
 import com.meta.quicklauncher.domain.usecase.GetInstalledAppsUseCase
 import com.meta.quicklauncher.domain.usecase.SearchAppsUseCase
+import com.meta.quicklauncher.input.ButtonHandler
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Singleton
 
 @Module
@@ -23,4 +26,14 @@ object AppModule {
     fun provideSearchAppsUseCase(
         useCase: SearchAppsUseCase
     ): SearchAppsUseCase = useCase
+
+    @Provides
+    @Singleton
+    fun provideApplicationScope(): CoroutineScope = CoroutineScope(SupervisorJob())
+
+    @Provides
+    @Singleton
+    fun provideButtonHandler(
+        buttonHandler: ButtonHandler
+    ): ButtonHandler = buttonHandler
 }
