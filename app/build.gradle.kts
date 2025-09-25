@@ -54,7 +54,11 @@ android {
 
 dependencies {
     // Meta Spatial SDK
-    implementation("com.oculus.spatial:spatial-sdk:1.0.0")
+    implementation("com.oculus.spatial:spatial-sdk:0.1.0")
+    implementation("com.oculus.spatial:spatial-sdk-compose:0.1.0")
+
+    // Meta Interaction SDK for gestures
+    implementation("com.oculus.interaction:interaction-sdk:0.1.0")
 
     // Jetpack Compose
     implementation("androidx.compose.ui:ui:1.4.3")
