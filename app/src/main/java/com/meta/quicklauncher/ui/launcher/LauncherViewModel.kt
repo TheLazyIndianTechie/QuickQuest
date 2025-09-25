@@ -9,10 +9,14 @@ import com.meta.quicklauncher.domain.usecase.GetInstalledAppsUseCase
 import com.meta.quicklauncher.domain.usecase.SearchAppsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -36,13 +40,17 @@ class LauncherViewModel @Inject constructor(
 
     init {
         loadInstalledApps()
+        setupSearchObserver()
     }
 
     private fun loadInstalledApps() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val apps = getInstalledAppsUseCase()
+                // Load apps on IO dispatcher for better performance
+                val apps = withContext(Dispatchers.IO) {
+                    getInstalledAppsUseCase()
+                }
                 _allApps.value = apps
                 _filteredApps.value = apps
             } catch (e: Exception) {
@@ -55,13 +63,27 @@ class LauncherViewModel @Inject constructor(
         }
     }
 
+    private fun setupSearchObserver() {
+        // Debounce search queries to avoid excessive filtering
+        viewModelScope.launch {
+            _searchQuery
+                .debounce(150) // 150ms debounce for smooth typing experience
+                .distinctUntilChanged()
+                .collect { query ->
+                    _filteredApps.value = if (query.isBlank()) {
+                        _allApps.value
+                    } else {
+                        // Perform search on Default dispatcher for CPU-intensive work
+                        withContext(Dispatchers.Default) {
+                            searchAppsUseCase(_allApps.value, query)
+                        }
+                    }
+                }
+        }
+    }
+
     fun onSearchQueryChanged(query: String) {
         _searchQuery.value = query
-        _filteredApps.value = if (query.isBlank()) {
-            _allApps.value
-        } else {
-            searchAppsUseCase(_allApps.value, query)
-        }
     }
 
     fun launchApp(appInfo: AppInfo) {

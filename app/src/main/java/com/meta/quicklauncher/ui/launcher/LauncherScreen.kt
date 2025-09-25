@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -85,10 +87,13 @@ fun LauncherScreen(viewModel: LauncherViewModel) {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(filteredApps) { app ->
+                items(
+                    items = filteredApps,
+                    key = { it.packageName } // Use package name as key for stable item identification
+                ) { app ->
                     AppListItem(
                         appInfo = app,
-                        onClick = { viewModel.launchApp(app) }
+                        onClick = remember(app) { { viewModel.launchApp(app) } } // Memoize click handler
                     )
                 }
             }
