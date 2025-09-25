@@ -9,6 +9,7 @@ import com.meta.quicklauncher.data.repository.UserPreferencesRepository
 import com.meta.quicklauncher.domain.model.AppInfo
 import com.meta.quicklauncher.domain.usecase.GetInstalledAppsUseCase
 import com.meta.quicklauncher.domain.usecase.SearchAppsUseCase
+import com.meta.quicklauncher.feedback.HapticFeedback
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -26,7 +27,8 @@ class LauncherViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val getInstalledAppsUseCase: GetInstalledAppsUseCase,
     private val searchAppsUseCase: SearchAppsUseCase,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val hapticFeedback: HapticFeedback
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
@@ -97,8 +99,10 @@ class LauncherViewModel @Inject constructor(
             intent?.let {
                 it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(it)
+                hapticFeedback.performLaunchFeedback()
             }
         } catch (e: Exception) {
+            hapticFeedback.performErrorFeedback()
             // Handle launch failure
         }
     }

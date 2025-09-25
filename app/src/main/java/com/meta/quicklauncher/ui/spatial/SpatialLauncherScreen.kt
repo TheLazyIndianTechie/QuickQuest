@@ -1,5 +1,7 @@
 package com.meta.quicklauncher.ui.spatial
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
@@ -16,34 +18,51 @@ import com.oculus.spatial.spatialactivity.SpatialActivity
 import com.oculus.spatial.spatialui.*
 
 @Composable
-fun SpatialLauncherScreen(viewModel: LauncherViewModel) {
+fun SpatialLauncherScreen(
+    viewModel: LauncherViewModel,
+    isVisible: Boolean = true
+) {
     val context = LocalContext.current as SpatialActivity
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val filteredApps by viewModel.filteredApps.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
 
-    // Spatial UI overlay positioned in 3D space
-    SpatialSurface(
-        modifier = Modifier
-            .spatialSize(width = 800.dp, height = 600.dp)
-            .spatialPosition(
-                position = SpatialPosition(
-                    x = 0.dp,
-                    y = 0.dp,
-                    z = -1000.dp // Position 1 meter in front of user
-                ),
-                coordinateSystem = SpatialCoordinateSystem.HeadLocked // Head-locked positioning
-            )
-            .spatialRotation(
-                rotation = SpatialRotation(
-                    x = 0f,
-                    y = 0f,
-                    z = 0f
-                )
-            ),
-        shape = SpatialShape.Rectangle(radius = 16.dp),
-        passthroughBackground = true // Enable passthrough for minimal UI takeover
+    // Animation specs for smooth transitions
+    val fadeInSpec = tween<Float>(durationMillis = 300, easing = EaseOutCubic)
+    val scaleInSpec = tween<Float>(durationMillis = 400, easing = EaseOutBack)
+    val slideInSpec = tween<Float>(durationMillis = 350, easing = EaseOutCubic)
+
+    // Animated spatial UI overlay
+    AnimatedVisibility(
+        visible = isVisible,
+        enter = fadeIn(animationSpec = fadeInSpec) +
+                scaleIn(animationSpec = scaleInSpec, initialScale = 0.8f) +
+                slideInVertically(animationSpec = slideInSpec, initialOffsetY = { -50 }),
+        exit = fadeOut(animationSpec = tween(200)) +
+               scaleOut(animationSpec = tween(250), targetScale = 0.8f) +
+               slideOutVertically(animationSpec = tween(200), targetOffsetY = { 50 })
     ) {
+        SpatialSurface(
+            modifier = Modifier
+                .spatialSize(width = 800.dp, height = 600.dp)
+                .spatialPosition(
+                    position = SpatialPosition(
+                        x = 0.dp,
+                        y = 0.dp,
+                        z = -1000.dp // Position 1 meter in front of user
+                    ),
+                    coordinateSystem = SpatialCoordinateSystem.HeadLocked // Head-locked positioning
+                )
+                .spatialRotation(
+                    rotation = SpatialRotation(
+                        x = 0f,
+                        y = 0f,
+                        z = 0f
+                    )
+                ),
+            shape = SpatialShape.Rectangle(radius = 16.dp),
+            passthroughBackground = true // Enable passthrough for minimal UI takeover
+        ) {
         // Glass-morphic overlay content
         Box(
             modifier = Modifier
@@ -98,6 +117,7 @@ fun SpatialLauncherScreen(viewModel: LauncherViewModel) {
                     }
                 }
             }
+        }
         }
     }
 }
