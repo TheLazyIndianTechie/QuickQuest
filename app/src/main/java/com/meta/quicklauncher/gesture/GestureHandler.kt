@@ -6,6 +6,7 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import com.meta.quicklauncher.QuickQuestApplication
 import com.meta.quicklauncher.feedback.HapticFeedback
+import com.meta.quicklauncher.feedback.SoundManager
 import com.oculus.interaction.OVRGestureListener
 import com.oculus.interaction.OVRGestureManager
 import com.oculus.interaction.gesture.PinchGesture
@@ -16,7 +17,8 @@ import javax.inject.Singleton
 @Singleton
 class GestureHandler @Inject constructor(
     @com.meta.quicklauncher.di.ApplicationContext private val context: Context,
-    private val hapticFeedback: HapticFeedback
+    private val hapticFeedback: HapticFeedback,
+    private val soundManager: SoundManager
 ) : LifecycleObserver, OVRGestureListener {
 
     private var gestureManager: OVRGestureManager? = null
@@ -45,10 +47,12 @@ class GestureHandler @Inject constructor(
         when (gesture) {
             is PinchGesture -> {
                 hapticFeedback.performGestureFeedback()
+                soundManager.playGestureSound()
                 onGestureDetected?.invoke(GestureType.PINCH)
             }
             is WristTapGesture -> {
                 hapticFeedback.performGestureFeedback()
+                soundManager.playGestureSound()
                 onGestureDetected?.invoke(GestureType.WRIST_TAP)
             }
         }
